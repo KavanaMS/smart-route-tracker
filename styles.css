@@ -1,0 +1,73 @@
+:root {
+  --bg-color: #f4f4f4;
+  --text-color: #000;
+  --card-bg: #fff;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.theme-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+#map {
+  height: 400px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+
+button {
+  display: block;
+  margin: 10px auto;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.info-section {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  padding: 15px;
+  border-radius: 8px;
+  max-width: 400px;
+  margin: auto;
+}
+
+.lazy-info {
+  padding: 10px;
+  border: 1px solid #ddd;
+  margin-top: 10px;
+  min-height: 30px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+}
+
+/* Dark Mode */
+body.dark-mode {
+  --bg-color: #121212;
+  --text-color: #f0f0f0;
+  --card-bg: #1e1e1e;
+}
+
+.analytics {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  padding: 15px;
+  border-radius: 8px;
+  max-width: 400px;
+  margin: 30px auto;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Smart Route Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    #map {
+      height: 400px;
+      width: 100%;
+      border: 2px solid #333;
+      margin-bottom: 20px;
+    }
+
+    button, select {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    .analytics {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 8px;
+      max-width: 400px;
+      margin: 20px auto;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-row {
+      margin: 5px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>📍 Smart Route Tracker</h1>
+
+  <div id="map"></div>
+
+  <p id="coordinates" class="info-row">📍 Lat: --, Lng: --</p>
+  <p id="weather" class="info-row">☄ Weather: --</p>
+
+  <button id="startBtn">Start Tracking</button>
+  <button id="resetBtn">Reset Analytics</button>
+  <button id="downloadBtn">📅 Download Path</button>
+
+  <select id="mapType">
+    <option value="roadmap">Roadmap</option>
+    <option value="satellite">Satellite</option>
+    <option value="terrain">Terrain</option>
+  </select>
+
+  <p id="status">Status: Waiting to start...</p>
+
+  <div class="analytics">
+    <h2>📊 Analytics</h2>
+    <p id="viewCount">Page Views: 0</p>
+    <p id="clickCount">Start Button Clicks: 0</p>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    let map, marker, polyline;
+    let path = [];
+    const statusText = document.getElementById("status");
+    const coordText = document.getElementById("coordinates");
+    const weatherText = document.getElementById("weather");
+
+    function initMap() {
+      const startPosition = { lat: 12.9716, lng: 77.5946 };
+
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: startPosition,
+        zoom: 15,
+        mapTypeId: "roadmap"
+      });
+
+      marker = new google.maps.Marker({
+        position: startPosition,
+        map: map,
+        title: "Your Location",
+      });
+
+      polyline = new google.maps.Polyline({
+        path: [],
+        geodesic: true,
+        strokeColor: "#007bff",
+        strokeOpacity: 1.0,
+        strokeWeight: 3,
+        map: map,
+      });
+    }
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        statusText.textContent = "Geolocation not supported.";
+        return;
+      }
+
+      statusText.textContent = "Tracking started...";
+
+      navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const newPos = { lat: latitude, lng: longitude };
+
+          path.push(newPos);
+          map.setCenter(newPos);
+          marker.setPosition(newPos);
+          polyline.getPath().push(new google.maps.LatLng(latitude, longitude));
+
+          coordText.textContent = `📍 Lat: ${latitude.toFixed(5)}, Lng: ${longitude.toFixed(5)}`;
+
+          weatherText.textContent = "☁️ Fetching weather...";
+
+          fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=YOUR-WEATHER-API-KEY&units=metric`)
+            .then(res => res.json())
+            .then(data => {
+              const weather = `${data.weather[0].main}, ${data.main.temp}°C`;
+              weatherText.textContent = "☄ Weather: " + weather;
+            });
+        },
+        (error) => {
+          statusText.textContent = "Error: " + error.message;
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+        }
+      );
+
+      let clicks = localStorage.getItem("startClicks");
+      clicks = clicks ? parseInt(clicks) + 1 : 1;
+      localStorage.setItem("startClicks", clicks);
+      document.getElementById("clickCount").textContent = "Start Button Clicks: " + clicks;
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      let views = localStorage.getItem("pageViews");
+      views = views ? parseInt(views) + 1 : 1;
+      localStorage.setItem("pageViews", views);
+      document.getElementById("viewCount").textContent = "Page Views: " + views;
+
+      let clicks = localStorage.getItem("startClicks") || 0;
+      document.getElementById("clickCount").textContent = "Start Button Clicks: " + clicks;
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem("pageViews");
+      localStorage.removeItem("startClicks");
+      document.getElementById("viewCount").textContent = "Page Views: 0";
+      document.getElementById("clickCount").textContent = "Start Button Clicks: 0";
+    });
+
+    document.getElementById("downloadBtn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(path)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "location-history.json";
+      link.click();
+    });
+
+    document.getElementById("mapType").addEventListener("change", (e) => {
+      map.setMapTypeId(e.target.value);
+    });
+  </script>
+
+  <!-- Google Maps API -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR-MAP-API-KEY&callback=initMap">
+  </script>
+</body>
+</html>
